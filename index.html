@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="OmniRoute: demo interactiva que enseña cómo un enrutador inteligente elige el mejor modelo de IA para cada tarea.">
+  <title>OmniRoute · Centro de control de rutas IA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow bg-glow--blue" aria-hidden="true"></div>
+  <div class="bg-glow bg-glow--purple" aria-hidden="true"></div>
+
+  <!-- ============ BARRA SUPERIOR ============ -->
+  <header class="topbar">
+    <a class="brand" href="#inicio" aria-label="OmniRoute, ir al inicio">
+      <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
+        <polygon points="24,3 42,13.5 42,34.5 24,45 6,34.5 6,13.5" fill="none" stroke="url(#brandGrad)" stroke-width="3"/>
+        <circle cx="24" cy="24" r="5" fill="url(#brandGrad)"/>
+        <path d="M24 19 V9 M28.3 26.5 L37 31.5 M19.7 26.5 L11 31.5" stroke="url(#brandGrad)" stroke-width="2.5" stroke-linecap="round"/>
+        <defs>
+          <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#3ab4ff"/><stop offset="1" stop-color="#a66bff"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <span class="brand-text">Omni<span>Route</span></span>
+    </a>
+    <nav class="topnav" aria-label="Secciones">
+      <a href="#demo">Demo</a>
+      <a href="#ventajas">Ventajas</a>
+      <a href="#glosario">Glosario</a>
+    </nav>
+    <div class="sys-status" id="sysStatus" role="status">
+      <span class="led"></span>
+      <span id="sysStatusText">4/4 proveedores en línea</span>
+    </div>
+  </header>
+
+  <!-- ============ HÉROE ============ -->
+  <section class="hero" id="inicio">
+    <div class="hero-copy">
+      <p class="eyebrow"><span class="led led--small"></span> Enrutador inteligente de IA</p>
+      <h1>Una sola pregunta.<br><span class="grad-text">El mejor cerebro</span> para responderla.</h1>
+      <p class="hero-sub">
+        <strong>OmniRoute</strong> recibe tu petición, descubre qué tipo de tarea es
+        y la envía al modelo de IA más adecuado. Si un modelo falla, busca otra ruta al instante.
+      </p>
+      <div class="hero-actions">
+        <a href="#demo" class="btn btn--primary">▶ Probar la demo</a>
+        <a href="#ventajas" class="btn btn--ghost">¿Por qué me sirve?</a>
+      </div>
+    </div>
+    <ol class="hero-flow" aria-label="Cómo funciona en 3 pasos">
+      <li><span class="hf-num">1</span><b>Preguntas</b><small>Escribes lo que necesitas</small></li>
+      <li><span class="hf-num">2</span><b>OmniRoute decide</b><small>Analiza la tarea y elige</small></li>
+      <li><span class="hf-num">3</span><b>El experto responde</b><small>Recibes la mejor respuesta</small></li>
+    </ol>
+  </section>
+
+  <!-- ============ PANEL PRINCIPAL ============ -->
+  <main class="dashboard" id="demo">
+
+    <!-- ---- Controles ---- -->
+    <aside class="panel controls" aria-labelledby="controlsTitle">
+      <div class="panel-head">
+        <h2 id="controlsTitle"><span class="ph-icon">⌘</span> Panel de control</h2>
+      </div>
+
+      <label class="field-label" for="prompt">Tu petición</label>
+      <textarea id="prompt" rows="4" maxlength="280" placeholder="Ej.: Explícame cómo funciona un bucle for en JavaScript."></textarea>
+      <p class="hint">Consejo: pulsa <kbd>Ctrl</kbd> + <kbd>Enter</kbd> para enviar.</p>
+
+      <div class="field-row">
+        <span class="field-label">Ejemplos</span>
+        <button type="button" class="btn-link" id="btnNextExample" title="Cargar el siguiente ejemplo">⟳ Cambiar ejemplo</button>
+      </div>
+      <div class="chips" id="exampleChips" role="group" aria-label="Peticiones de ejemplo"></div>
+
+      <div class="actions">
+        <button type="button" class="btn btn--primary btn--block" id="btnRun">▶ Ejecutar simulación</button>
+        <button type="button" class="btn btn--ghost" id="btnReset" title="Reiniciar el flujo">↺ Reiniciar</button>
+      </div>
+
+      <span class="field-label">Velocidad de la animación</span>
+      <div class="segmented" id="speedControl" role="radiogroup" aria-label="Velocidad">
+        <button type="button" role="radio" data-speed="1.7" aria-checked="false">Lenta</button>
+        <button type="button" role="radio" data-speed="1" aria-checked="true" class="is-active">Normal</button>
+        <button type="button" role="radio" data-speed="0.5" aria-checked="false">Rápida</button>
+      </div>
+
+      <div class="field-row">
+        <span class="field-label">Proveedores</span>
+        <button type="button" class="btn-link" id="btnRestore">Restaurar todos</button>
+      </div>
+      <ul class="providers" id="providerList">
+        <li>
+          <label class="provider-switch" for="sw-claude">
+            <img src="claude.jpeg" alt="" class="mini-logo">
+            <span class="ps-name">Claude</span>
+            <span class="ps-state">En línea</span>
+            <input type="checkbox" id="sw-claude" data-model="claude" checked>
+            <span class="switch" aria-hidden="true"></span>
+          </label>
+        </li>
+        <li>
+          <label class="provider-switch" for="sw-perplexity">
+            <img src="perplexity.png" alt="" class="mini-logo">
+            <span class="ps-name">Perplexity</span>
+            <span class="ps-state">En línea</span>
+            <input type="checkbox" id="sw-perplexity" data-model="perplexity" checked>
+            <span class="switch" aria-hidden="true"></span>
+          </label>
+        </li>
+        <li>
+          <label class="provider-switch" for="sw-gemini">
+            <img src="gemini.avif" alt="" class="mini-logo">
+            <span class="ps-name">Gemini</span>
+            <span class="ps-state">En línea</span>
+            <input type="checkbox" id="sw-gemini" data-model="gemini" checked>
+            <span class="switch" aria-hidden="true"></span>
+          </label>
+        </li>
+        <li>
+          <label class="provider-switch" for="sw-chatgpt">
+            <img src="chatgpt.jpg" alt="" class="mini-logo">
+            <span class="ps-name">ChatGPT</span>
+            <span class="ps-state">En línea</span>
+            <input type="checkbox" id="sw-chatgpt" data-model="chatgpt" checked>
+            <span class="switch" aria-hidden="true"></span>
+          </label>
+        </li>
+      </ul>
+
+      <button type="button" class="btn btn--warn btn--block" id="btnOutage">⚡ Simular caída del modelo ideal</button>
+      <p class="hint">Apaga el modelo que OmniRoute elegiría y observa cómo encuentra una <b>ruta alternativa</b>.</p>
+    </aside>
+
+    <!-- ---- Escenario de enrutamiento ---- -->
+    <section class="panel stage-panel" aria-labelledby="stageTitle">
+      <div class="panel-head">
+        <h2 id="stageTitle"><span class="ph-icon">◎</span> Mapa de rutas en vivo</h2>
+        <span class="timer" id="timer">00.0 s</span>
+      </div>
+
+      <ol class="pipeline" id="pipeline" aria-label="Etapas del proceso">
+        <li data-step="0"><span class="pl-dot">1</span><span class="pl-label">Recepción</span></li>
+        <li data-step="1"><span class="pl-dot">2</span><span class="pl-label">Análisis</span></li>
+        <li data-step="2"><span class="pl-dot">3</span><span class="pl-label">Selección</span></li>
+        <li data-step="3"><span class="pl-dot">4</span><span class="pl-label">Envío</span></li>
+        <li data-step="4"><span class="pl-dot">5</span><span class="pl-label">Respuesta</span></li>
+      </ol>
+
+      <div class="stage" id="stage">
+        <svg class="links" id="links" aria-hidden="true"></svg>
+
+        <!-- Nodo de entrada -->
+        <div class="node node-user" id="nodeUser">
+          <span class="node-label">📥 Petición entrante</span>
+          <p id="userPreview">Escribe o elige un ejemplo…</p>
+        </div>
+
+        <!-- Núcleo OmniRoute -->
+        <div class="core-wrap">
+          <div class="core" id="core">
+            <span class="core-ring core-ring--outer"></span>
+            <span class="core-ring core-ring--inner"></span>
+            <span class="core-pulse"></span>
+            <div class="core-inner">
+              <svg viewBox="0 0 48 48" class="core-icon" aria-hidden="true">
+                <polygon points="24,4 41,14 41,34 24,44 7,34 7,14" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                <circle cx="24" cy="24" r="5" fill="currentColor"/>
+                <path d="M24 19 V10 M28.3 26.5 L36 31 M19.7 26.5 L12 31" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+              </svg>
+              <strong>OmniRoute</strong>
+              <span class="core-status" id="coreStatus">En espera</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjetas de modelos -->
+        <article class="model-card" id="model-claude" data-model="claude">
+          <span class="mc-badge">Elegido</span>
+          <div class="mc-head">
+            <div class="logo-tile"><img src="claude.jpeg" alt="Logo de Claude"></div>
+            <div class="mc-title"><h3>Claude</h3><span>Anthropic</span></div>
+            <span class="status-dot" aria-hidden="true"></span>
+          </div>
+          <span class="tag">&lt;/&gt; Programación</span>
+          <p class="mc-desc">Código complejo, limpio y bien explicado.</p>
+          <div class="mc-foot">
+            <span class="mc-status">En línea</span>
+            <span class="mc-meta"><b class="mc-latency">— ms</b> · <b class="mc-count">0</b> pet.</span>
+          </div>
+        </article>
+
+        <article class="model-card" id="model-perplexity" data-model="perplexity">
+          <span class="mc-badge">Elegido</span>
+          <div class="mc-head">
+            <div class="logo-tile"><img src="perplexity.png" alt="Logo de Perplexity"></div>
+            <div class="mc-title"><h3>Perplexity</h3><span>Perplexity AI</span></div>
+            <span class="status-dot" aria-hidden="true"></span>
+          </div>
+          <span class="tag">🌐 Investigación web</span>
+          <p class="mc-desc">Busca en internet y cita sus fuentes.</p>
+          <div class="mc-foot">
+            <span class="mc-status">En línea</span>
+            <span class="mc-meta"><b class="mc-latency">— ms</b> · <b class="mc-count">0</b> pet.</span>
+          </div>
+        </article>
+
+        <article class="model-card" id="model-gemini" data-model="gemini">
+          <span class="mc-badge">Elegido</span>
+          <div class="mc-head">
+            <div class="logo-tile"><img src="gemini.avif" alt="Logo de Gemini"></div>
+            <div class="mc-title"><h3>Gemini</h3><span>Google</span></div>
+            <span class="status-dot" aria-hidden="true"></span>
+          </div>
+          <span class="tag">🧠 Razonamiento lógico</span>
+          <p class="mc-desc">Analiza problemas paso a paso.</p>
+          <div class="mc-foot">
+            <span class="mc-status">En línea</span>
+            <span class="mc-meta"><b class="mc-latency">— ms</b> · <b class="mc-count">0</b> pet.</span>
+          </div>
+        </article>
+
+        <article class="model-card" id="model-chatgpt" data-model="chatgpt">
+          <span class="mc-badge">Elegido</span>
+          <div class="mc-head">
+            <div class="logo-tile"><img src="chatgpt.jpg" alt="Logo de ChatGPT"></div>
+            <div class="mc-title"><h3>ChatGPT</h3><span>OpenAI</span></div>
+            <span class="status-dot" aria-hidden="true"></span>
+          </div>
+          <span class="tag">✨ Creatividad y general</span>
+          <p class="mc-desc">Versátil y equilibrado, ideal para crear.</p>
+          <div class="mc-foot">
+            <span class="mc-status">En línea</span>
+            <span class="mc-meta"><b class="mc-latency">— ms</b> · <b class="mc-count">0</b> pet.</span>
+          </div>
+        </article>
+
+        <!-- Nodo de salida -->
+        <div class="node node-output" id="nodeOutput">
+          <span class="node-label">📤 Respuesta</span>
+          <p id="outputPreview">Esperando…</p>
+        </div>
+      </div>
+
+      <!-- Análisis de la tarea -->
+      <div class="analysis" id="analysis">
+        <div class="analysis-head">
+          <h3>Análisis de la tarea</h3>
+          <span class="verdict" id="analysisVerdict">Sin analizar</span>
+        </div>
+        <div class="bars">
+          <div class="bar" data-cat="code"><span class="bar-label">&lt;/&gt; Programación</span><span class="bar-track"><span class="bar-fill"></span></span><span class="bar-pct">0%</span></div>
+          <div class="bar" data-cat="research"><span class="bar-label">🌐 Investigación</span><span class="bar-track"><span class="bar-fill"></span></span><span class="bar-pct">0%</span></div>
+          <div class="bar" data-cat="reasoning"><span class="bar-label">🧠 Razonamiento</span><span class="bar-track"><span class="bar-fill"></span></span><span class="bar-pct">0%</span></div>
+          <div class="bar" data-cat="creative"><span class="bar-label">✨ Creatividad</span><span class="bar-track"><span class="bar-fill"></span></span><span class="bar-pct">0%</span></div>
+        </div>
+        <div class="keywords" id="keywords" aria-label="Palabras clave detectadas">
+          <span class="kw-empty">Las palabras clave detectadas aparecerán aquí.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---- Registro de eventos ---- -->
+    <aside class="panel log-panel" aria-labelledby="logTitle">
+      <div class="panel-head">
+        <h2 id="logTitle"><span class="ph-icon">≡</span> Registro de eventos</h2>
+        <button type="button" class="btn-link" id="btnClearLog">Limpiar</button>
+      </div>
+      <ul class="log" id="log" aria-live="polite"></ul>
+    </aside>
+
+    <!-- ---- Resultado ---- -->
+    <section class="panel result" id="result" aria-labelledby="resultTitle">
+      <div class="panel-head">
+        <h2 id="resultTitle"><span class="ph-icon">✦</span> Respuesta y explicación</h2>
+        <div class="summary" id="summary"></div>
+      </div>
+      <div class="result-grid">
+        <div class="response-box">
+          <div class="response-from" id="responseFrom">
+            <span class="rf-logo" id="rfLogo">?</span>
+            <span>Respuesta de <b id="rfName">—</b></span>
+            <span class="demo-tag">simulada</span>
+          </div>
+          <pre class="response-text" id="responseText">Ejecuta una simulación para ver aquí la respuesta del modelo elegido.</pre>
+        </div>
+        <div class="why-box">
+          <h3>💡 ¿Por qué esta ruta?</h3>
+          <div class="why-text" id="whyText">
+            <p>Cuando ejecutes una simulación, aquí te explicaremos qué detectó OmniRoute y por qué eligió ese modelo.</p>
+          </div>
+          <ol class="route-trace" id="routeTrace" aria-label="Recorrido de la petición"></ol>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ VENTAJAS ============ -->
+  <section class="section" id="ventajas">
+    <div class="section-head">
+      <p class="eyebrow"><span class="led led--small"></span> Para estudiantes</p>
+      <h2>¿Qué ganas tú con <span class="grad-text">OmniRoute</span>?</h2>
+    </div>
+    <div class="adv-grid">
+      <article class="adv-card">
+        <span class="adv-icon">🎯</span>
+        <h3>El experto correcto</h3>
+        <p>Cada pregunta llega al modelo que mejor la resuelve: código, búsqueda, lógica o creatividad.</p>
+      </article>
+      <article class="adv-card">
+        <span class="adv-icon">🛡️</span>
+        <h3>Nunca te quedas tirado</h3>
+        <p>Si un proveedor se cae, OmniRoute usa una ruta alternativa sin que tengas que hacer nada.</p>
+      </article>
+      <article class="adv-card">
+        <span class="adv-icon">🚪</span>
+        <h3>Una sola puerta</h3>
+        <p>No necesitas saltar entre cuatro aplicaciones: preguntas en un sitio y el sistema decide.</p>
+      </article>
+      <article class="adv-card">
+        <span class="adv-icon">🔍</span>
+        <h3>Aprendes cómo piensa la IA</h3>
+        <p>Ver por qué se elige cada modelo te ayuda a entender sus fortalezas y límites.</p>
+      </article>
+      <article class="adv-card">
+        <span class="adv-icon">⚡</span>
+        <h3>Más rápido y eficiente</h3>
+        <p>Usar el modelo adecuado ahorra tiempo y recursos frente a usar siempre el mismo para todo.</p>
+      </article>
+      <article class="adv-card">
+        <span class="adv-icon">🧭</span>
+        <h3>Pensamiento crítico</h3>
+        <p>Comparar respuestas y fuentes te enseña a verificar la información, no solo a copiarla.</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ GLOSARIO ============ -->
+  <section class="section" id="glosario">
+    <div class="section-head">
+      <p class="eyebrow"><span class="led led--small"></span> Mini glosario</p>
+      <h2>Palabras clave para entender la demo</h2>
+    </div>
+    <dl class="glossary">
+      <div><dt>Enrutador (router)</dt><dd>Sistema que decide por qué camino enviar una petición.</dd></div>
+      <div><dt>Modelo de IA</dt><dd>Programa entrenado para entender y generar texto, código o ideas.</dd></div>
+      <div><dt>Ruta alternativa (failover)</dt><dd>Plan B automático cuando el camino principal no funciona.</dd></div>
+      <div><dt>Latencia</dt><dd>Tiempo que tarda un modelo en responder, medido en milisegundos (ms).</dd></div>
+    </dl>
+  </section>
+
+  <footer class="footer">
+    <p>OmniRoute · Demo educativa. Las respuestas son simuladas con fines didácticos.</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
